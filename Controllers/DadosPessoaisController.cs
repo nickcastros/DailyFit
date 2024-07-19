@@ -17,50 +17,34 @@ namespace DailyFit.Controllers;
 public class DadosPessoaisController : ControllerBase
 {
     private UsuarioContext _context;
-    private IMapper _mapper;
-    private UsuarioService _usuarioService;
 
-    private readonly UserManager<Usuario> _userManager;
+    private DadosPessoaisService _dadosPessoaisService;
 
-    public DadosPessoaisController(UsuarioContext context, IMapper mapper, UsuarioService usuarioService, UserManager<Usuario> userManager)
+    public DadosPessoaisController(UsuarioContext context, DadosPessoaisService dadosPessoaisService)
     {
         _context = context;
-        _mapper = mapper;
-        _usuarioService = usuarioService;
-        _userManager = userManager;
+
+        _dadosPessoaisService = dadosPessoaisService;
     }
 
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> AdicionaDadosPessoaisAsync([FromBody] CreateDadosPessoaisDto dadosPessoaisDto)
     {
-        DadosPessoais dadosPessoais = _mapper.Map<DadosPessoais>(dadosPessoaisDto);
-
         string username = User.FindFirstValue("username");
         if (username == null)
         {
             return NotFound();
         }
-
-        var user = _context.Users.FirstOrDefault(user => user.NormalizedUserName == username.ToUpper());
-
-        if (user == null)
+        try
         {
-            return NotFound();
-
+            await _dadosPessoaisService.AdicionaDadosPessoais(dadosPessoaisDto, username);
+            return Ok("Dados Pessoais Cadastrados!");
         }
-        dadosPessoais.usuarioId = user.Id;
-        dadosPessoais.Usuario = user;
-
-        _context.DadosPessoais.Add(dadosPessoais);
-        await _context.SaveChangesAsync();
-
-        user.DadosPessoaisId = dadosPessoais.Id;
-        await _userManager.UpdateAsync(user);
-
-        var usuarioDto = _mapper.Map<ReadUsuarioDto>(user);
-        return CreatedAtAction(nameof(RecuperaDadosPessoais), RecuperaDadosPessoais());
-        //return CreatedAtAction(nameof(RecuperaDadosPessoais), new { id = dadosPessoais.id });
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
     }
 
@@ -68,31 +52,26 @@ public class DadosPessoaisController : ControllerBase
     [Authorize]
     public IEnumerable<ReadDadosPessoaisDto> RecuperaDadosPessoaisDeTodos()
     {
-        return _mapper.Map<List<ReadDadosPessoaisDto>>(_context.DadosPessoais.ToList());
+        return _dadosPessoaisService.RecuperaDadosPessoaisDeTodos();
     }
 
     [HttpGet]
     [Authorize]
-    public IActionResult RecuperaDadosPessoais()
+    public async Task<IActionResult> RecuperaDadosPessoaisAsync()
     {
         string username = User.FindFirstValue("username");
         if (username == null)
         {
             return NotFound();
         }
-
-        var user = _context.Users.FirstOrDefault(user => user.NormalizedUserName == username.ToUpper());
-        if (user == null)
+        try
         {
-            return NotFound();
+            return Ok(await _dadosPessoaisService.RecuperaDadosPessoais(username));
         }
-
-        ReadDadosPessoaisDto dadosPessoais = _mapper.Map<ReadDadosPessoaisDto>(user.DadosPessoais);
-        if (dadosPessoais != null)
+        catch (Exception ex)
         {
-            return Ok(dadosPessoais);
+            return BadRequest(ex.Message);
         }
-        return NotFound();
     }
     /*
         [HttpPut("{id}")]
@@ -110,66 +89,65 @@ public class DadosPessoaisController : ControllerBase
 */
     [HttpPatch]
     [Authorize]
-    public IActionResult AtualizaParcialmenteDadosPessoais(JsonPatchDocument<UpdateDadosPessoaisDto> patch)
+    public async Task<IActionResult> AtualizaParcialmenteDadosPessoaisAsync(JsonPatchDocument<UpdateDadosPessoaisDto> patch)
     {
         if (patch == null)
         {
             return BadRequest("O documento de patch não pode ser nulo.");
         }
-
         string username = User.FindFirstValue("username");
         if (username == null)
         {
-            return NotFound();
+            return NotFound("Usuário não encontrado.");
         }
 
-        var user = _context.Users.FirstOrDefault(user => user.NormalizedUserName == username.ToUpper());
-        if (user == null)
-        {
-            return NotFound();
-        }
+        UpdateDadosPessoaisDto dadosPessoaisParaAtualizar;
 
-        var dadosPessoais = _context.DadosPessoais.FirstOrDefault(dp => dp.Id == user.DadosPessoaisId);
-        if (dadosPessoais == null)
+        try
         {
-            return NotFound();
+            dadosPessoaisParaAtualizar = _dadosPessoaisService.GetDadosPessoaisParaAtualizar(username);
         }
-        var dadosPessoaisParaAtualizar = _mapper.Map<UpdateDadosPessoaisDto>(dadosPessoais);
+        catch (Exception ex)
+        {
+            return NotFound(ex.Message);
+        }
 
         patch.ApplyTo(dadosPessoaisParaAtualizar, ModelState);
+
         if (!TryValidateModel(dadosPessoaisParaAtualizar))
         {
             return ValidationProblem(ModelState);
         }
-        _mapper.Map(dadosPessoaisParaAtualizar, dadosPessoais);
-        _context.SaveChanges();
 
-        return NoContent();
+        try
+        {
+            await _dadosPessoaisService.AtualizaParcialmenteDadosPessoais(dadosPessoaisParaAtualizar, patch);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete]
     [Authorize]
-    public IActionResult DeletaDadosPessoais()
+    public async Task<IActionResult> DeletaDadosPessoaisAsync()
     {
         string username = User.FindFirstValue("username");
         if (username == null)
         {
             return NotFound();
         }
-
-        var user = _context.Users.FirstOrDefault(user => user.NormalizedUserName == username.ToUpper());
-        if (user == null)
+        try
         {
-            return NotFound();
+            await _dadosPessoaisService.DeletaDadosPessoais(username);
+            return NoContent();
         }
-        var dadosPessoais = _context.DadosPessoais.FirstOrDefault(dadosPessoais => dadosPessoais.Id == user.DadosPessoaisId);
-        if (dadosPessoais == null)
+        catch (Exception ex)
         {
-            return NotFound();
+            return BadRequest(ex.Message);
         }
-        _context.DadosPessoais.Remove(dadosPessoais);
-        _context.SaveChanges();
-        return NoContent();
     }
 
 }

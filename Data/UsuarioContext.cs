@@ -13,12 +13,11 @@ public class UsuarioContext : IdentityDbContext<Usuario>
     {
         base.OnModelCreating(builder);
 
-        // Configuração adicional para a relação entre Usuario e DadosPessoais
         builder.Entity<Usuario>()
             .HasOne(Usuario => Usuario.DadosPessoais)
             .WithOne(DadosPessoais => DadosPessoais.Usuario)
             .HasForeignKey<DadosPessoais>(DadosPessoais => DadosPessoais.usuarioId)
-            .OnDelete(DeleteBehavior.Restrict); // Configurar delete cascade se desejar
+            .OnDelete(DeleteBehavior.Restrict); 
     }
 
 }
