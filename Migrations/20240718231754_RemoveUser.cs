@@ -4,7 +4,7 @@
 
 namespace DailyFitAPI.Migrations
 {
-    public partial class InitialCreate2 : Migration
+    public partial class RemoveUser : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

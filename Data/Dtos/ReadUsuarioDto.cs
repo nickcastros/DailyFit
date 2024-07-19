@@ -1,9 +1,12 @@
+using DailyFit.Models;
+
 namespace DailyFit.Data.Dtos;
 
 public class ReadUsuarioDto
 {
-    public string Nome { get; set; }
+    public string username { get; set; }
 
-    public string Email { get; set; }
+    public ReadDadosPessoaisDto dadosPessoais { get; set; }
+
 
 }

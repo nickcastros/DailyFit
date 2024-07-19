@@ -7,8 +7,8 @@ public class UsuarioProfile : Profile
 {
     public UsuarioProfile()
     {
-        CreateMap<CreateUsuarioDto, Usuario>();
+        CreateMap<CreateUsuarioDto, Usuario>(); 
         CreateMap<UpdateUsuarioDto, Usuario>();
-        CreateMap<Usuario,ReadUsuarioDto>();
+        CreateMap<Usuario, ReadUsuarioDto>().ForMember(dest => dest.dadosPessoais, opt => opt.MapFrom(src => src.DadosPessoais));
     }
 }

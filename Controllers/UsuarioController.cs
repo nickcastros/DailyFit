@@ -2,6 +2,8 @@ using AutoMapper;
 using DailyFit.Data;
 using DailyFit.Data.Dtos;
 using DailyFit.Models;
+using DailyFit.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,33 +12,41 @@ namespace DailyFit.Controllers;
 [ApiController]
 [Route("[controller]")]
 
-public class UsuarioController : ControllerBase{
-    private DailyFitContext _context;
-    private IMapper _mapper;
-    public UsuarioController(DailyFitContext context, IMapper mapper){
-        _context = context;
-        _mapper = mapper;
+public class UsuarioController : ControllerBase
+{
+
+    private UsuarioService _usuarioService;
+
+    public UsuarioController(UsuarioService usuarioService)
+    {
+      _usuarioService = usuarioService;
     }
 
-    [HttpPost]
-
-    public IActionResult AdicionaUsuario([FromBody] CreateUsuarioDto usuarioDto){
-        Usuario usuario = _mapper.Map<Usuario>(usuarioDto);
-
-        _context.Usuarios.Add(usuario);
-        _context.SaveChanges();
-        return CreatedAtAction(nameof(RecuperaUsuarioPorId), new {Id = usuario.Id}, usuario);
+    [HttpPost("cadastro")]
+    public async Task<IActionResult> AdicionaUsuario(CreateUsuarioDto usuarioDto)
+    {
+        await _usuarioService.Cadastra(usuarioDto);
+        return Ok("Usuário Cadastrado");
     }
 
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginUsuarioDto dto){
+        var token = await _usuarioService.Login(dto);
+        return Ok(token);
+    }
+/*
     [HttpGet]
-    public IEnumerable<ReadUsuarioDto> RecuperaUsuario(){
-        return _mapper.Map<List<ReadUsuarioDto>>(_context.Usuarios.ToList());
+    public IEnumerable<ReadUsuarioDto> RecuperaUsuario()
+    {
+        return _mapper.Map<List<ReadUsuarioDto>>(_context.Users.ToList());
     }
 
     [HttpGet("{id}")]
-    public IActionResult RecuperaUsuarioPorId(int id){
-        var usuario = _context.Usuarios.FirstOrDefault(usuario => usuario.Id == id);
-        if (usuario != null){
+    public IActionResult RecuperaUsuarioPorId(string id)
+    {
+        var usuario = _context.Users.FirstOrDefault(usuario => usuario.Id == id);
+        if (usuario != null)
+        {
             ReadUsuarioDto usuarioDto = _mapper.Map<ReadUsuarioDto>(usuario);
             return Ok(usuarioDto);
         }
@@ -44,9 +54,11 @@ public class UsuarioController : ControllerBase{
     }
 
     [HttpPut("{id}")]
-    public IActionResult AtualizaUsuario(int id, [FromBody] UpdateUsuarioDto usuarioDto){
-        var usuario = _context.Usuarios.FirstOrDefault(usuario => usuario.Id == id);
-        if (usuario == null){
+    public IActionResult AtualizaUsuario(string id, [FromBody] UpdateUsuarioDto usuarioDto)
+    {
+        var usuario = _context.Users.FirstOrDefault(usuario => usuario.Id == id);
+        if (usuario == null)
+        {
             return NotFound();
         }
         _mapper.Map(usuarioDto, usuario);
@@ -56,14 +68,17 @@ public class UsuarioController : ControllerBase{
 
     [HttpPatch("{id}")]
 
-    public IActionResult AtualizaParcialmenteUsuario(int id, JsonPatchDocument<UpdateUsuarioDto> patch){
-        var usuario = _context.Usuarios.FirstOrDefault(usuario => usuario.Id == id);
-        if (usuario == null){
+    public IActionResult AtualizaParcialmenteUsuario(string id, JsonPatchDocument<UpdateUsuarioDto> patch)
+    {
+        var usuario = _context.Users.FirstOrDefault(usuario => usuario.Id == id);
+        if (usuario == null)
+        {
             return NotFound();
         }
         var usuarioParaAtualizar = _mapper.Map<UpdateUsuarioDto>(usuario);
         patch.ApplyTo(usuarioParaAtualizar, ModelState);
-        if(!TryValidateModel(usuarioParaAtualizar)){
+        if (!TryValidateModel(usuarioParaAtualizar))
+        {
             return ValidationProblem(ModelState);
         }
         _mapper.Map(usuarioParaAtualizar, usuario);
@@ -74,13 +89,16 @@ public class UsuarioController : ControllerBase{
 
     [HttpDelete("{id}")]
 
-    public IActionResult DeletaUsuario(int id){
-        var usuario = _context.Usuarios.FirstOrDefault(usuario => usuario.Id == id);
-        if (usuario == null){
+    public IActionResult DeletaUsuario(string id)
+    {
+        var usuario = _context.Users.FirstOrDefault(usuario => usuario.Id == id);
+        if (usuario == null)
+        {
             return NotFound();
         }
-        _context.Usuarios.Remove(usuario);
+        _context.Users.Remove(usuario);
         _context.SaveChanges();
         return NoContent();
     }
+    */
 }

@@ -1,16 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace DailyFit.Models;
 
-public class Usuario
+public class Usuario : IdentityUser
 {
-    [Key]
-    [Required]
-    public int Id { get; set; }
-    [Required(ErrorMessage = "O campo nome é obrigatório")]
-    public string Nome { get; set; }
-    [Required(ErrorMessage = "O campo email é obrigatório")]
-    public string Email { get; set; }
-    [Required(ErrorMessage = "O campo senha é obrigatório")]
-    public string Senha { get; set; }
+    public int? DadosPessoaisId { get; set; }
+    public virtual DadosPessoais? DadosPessoais { get; set; }
+    public Usuario() : base() {}
 }

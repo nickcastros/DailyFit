@@ -16,6 +16,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       #- ConnectionStrings__DefaultConnection=Server=locahost;Database=filme;User=root;Password=root;
       - ConnectionStrings__DefaultConnection=Server=db;Database=mydb;User=apiuser;Password=apipassword;
+      - SymmetricSecurityKey=chave-api-dailyfit-1234567890-ABCDEFGH
 
   db:
     image: mysql:8.0
